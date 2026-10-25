@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lo que me sale del Pen · Archivo</title>
+<style>
+  :root{
+    --bg:#0f0f14; --card:#181822; --card2:#20202d; --text:#ececf3; --muted:#9a9ab0;
+    --accent:#ff4d6d; --accent2:#ff8a4d; --line:#2a2a3a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6fa; --card:#fff; --card2:#eeeef5; --text:#1a1a24; --muted:#6a6a80; --line:#dcdce8; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,sans-serif;padding-bottom:230px}
+  header{padding:28px 16px 18px;max-width:820px;margin:0 auto;display:flex;gap:16px;align-items:center}
+  header img{width:84px;height:84px;border-radius:14px;object-fit:cover;background:var(--card2)}
+  h1{margin:0;font-size:1.5rem;line-height:1.15}
+  header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+  header a{color:var(--accent)}
+  main{max-width:820px;margin:0 auto;padding:0 16px}
+  .tools{display:flex;gap:8px;margin:8px 0 14px}
+  .tools button,.tools input,.tools select{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+  .tools input{flex:1;min-width:0}
+  ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  li button.ep{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  li button.ep:hover{background:var(--card2)}
+  li button.ep:focus-visible{outline:2px solid var(--accent)}
+  li.on button.ep{border-color:var(--accent);background:var(--card2)}
+  .ico{flex:none;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:14px}
+  .meta{flex:1;min-width:0}
+  .meta b{display:block}
+  .meta small{color:var(--muted)}
+  .bar{height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent);width:0}
+  .dl{flex:none;color:var(--muted);text-decoration:none;font-size:.85rem;padding:8px;border-radius:8px}
+  .dl:hover{color:var(--text);background:var(--card2)}
+  li{display:flex;align-items:center;gap:4px}
+  li button.ep{flex:1}
+
+  #player{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+  #player .in{max-width:820px;margin:0 auto}
+  #now{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+  .seek{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--muted)}
+  input[type=range]{accent-color:var(--accent);width:100%;margin:0}
+  .seek input{flex:1}
+  .ctrl{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .ctrl button,.ctrl select{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer}
+  .ctrl button:hover{border-color:var(--accent)}
+  #play{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:#fff;width:52px;height:52px;border-radius:50%;font-size:20px;padding:0}
+  .vol{display:flex;align-items:center;gap:6px;width:120px}
+  .hint{text-align:center;color:var(--muted);font-size:.75rem;margin-top:6px}
+  @media (max-width:560px){ .vol{display:none} .hint{display:none} body{padding-bottom:200px} }
+</style>
+</head>
+<body>
+<header>
+  <img src="https://www.locafm.com/uploads/media/programas/0001/06/thumb_5164_programas_metadata.jpeg" alt="" onerror="this.style.display='none'">
+  <div>
+    <h1>Lo que me sale del Pen</h1>
+    <p>DJ Neil · Loca FM · Todos los programas guardados (4 h cada uno)<br>
+    <a href="https://www.locafm.com/programas/lo-que-me-sale-del-pen.html" target="_blank" rel="noopener">Página oficial</a></p>
+  </div>
+</header>
+
+<main>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Buscar fecha (ej. 2026-09, 23/10)…">
+    <button id="upd" title="Buscar programas nuevos">↻ Nuevos</button>
+    <select id="order"><option value="desc">Más nuevos</option><option value="asc">Más antiguos</option></select>
+  </div>
+  <div id="status" style="color:var(--muted);font-size:.8rem;margin:-6px 0 10px;min-height:1em"></div>
+  <ul id="list"></ul>
+</main>
+
+<div id="player">
+  <div class="in">
+    <div id="now">Elige un programa para empezar</div>
+    <div class="seek">
+      <span id="cur">0:00:00</span>
+      <input id="seek" type="range" min="0" max="1000" value="0" step="1">
+      <span id="dur">0:00:00</span>
+    </div>
+    <div class="ctrl">
+      <button id="b60" title="Atrás 1 min">−1m</button>
+      <button id="b15" title="Atrás 15 s">−15s</button>
+      <button id="play" title="Reproducir / pausa (espacio)">▶</button>
+      <button id="f15" title="Adelante 15 s">+15s</button>
+      <button id="f60" title="Adelante 1 min">+1m</button>
+      <button id="prev" title="Programa anterior">⏮</button>
+      <button id="next" title="Programa siguiente">⏭</button>
+      <select id="rate" title="Velocidad">
+        <option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option>
+      </select>
+      <div class="vol">🔊<input id="vol" type="range" min="0" max="1" step="0.01" value="1"></div>
+    </div>
+    <div class="hint">Espacio: play/pausa · ← → ±15 s · ↑ ↓ volumen · retoma donde lo dejaste</div>
+  </div>
+</div>
+
+<audio id="au" preload="metadata"></audio>
+
+<script>
+const BASE = "https://www.locafm.com/uploads/podcast/lo-que-me-sale-del-pen__dj-neil/lo-que-me-sale-del-pen__dj-neil_";
+const DATES = ["2026-05-15","2026-05-22","2026-05-29","2026-06-05","2026-06-12","2026-06-19","2026-06-26","2026-07-03","2026-07-10","2026-07-17","2026-07-24","2026-07-31","2026-08-07","2026-08-14","2026-08-21","2026-08-28","2026-09-04","2026-09-11","2026-09-18","2026-09-25","2026-10-02","2026-10-09","2026-10-16","2026-10-23"];
+const mk = d => ({
+  date: d,
+  url: BASE + d + "_14-00.mp3",
+  label: new Date(d + "T12:00:00").toLocaleDateString("es-ES", {weekday:"long", day:"numeric", month:"long", year:"numeric"}),
+  short: d.split("-").reverse().join("/")
+});
+let EPS = DATES.map(mk);
+
+const $ = id => document.getElementById(id);
+const au = $("au"), list = $("list");
+let cur = null;
+
+const store = {
+  get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
+};
+const prog = store.get("lqmsdp-progress", {}); // date -> {t, d}
+
+const fmt = s => {
+  if (!isFinite(s)) s = 0;
+  s = Math.floor(s);
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return h + ":" + String(m).padStart(2,"0") + ":" + String(x).padStart(2,"0");
+};
+
+function render(){
+  const q = $("q").value.trim().toLowerCase();
+  const asc = $("order").value === "asc";
+  let eps = EPS.filter(e => !q || (e.date + " " + e.short + " " + e.label.toLowerCase()).includes(q));
+  eps = asc ? eps : eps.slice().reverse();
+  list.innerHTML = "";
+  for (const e of eps){
+    const p = prog[e.date];
+    const pct = p && p.d ? Math.min(100, p.t / p.d * 100) : 0;
+    const li = document.createElement("li");
+    if (cur && cur.date === e.date) li.classList.add("on");
+    li.innerHTML = `
+      <button class="ep"><span class="ico">${cur && cur.date===e.date && !au.paused ? "❚❚" : "▶"}</span>
+        <span class="meta"><b>${e.label[0].toUpperCase() + e.label.slice(1)}</b>
+        <small>14:00 – 18:00 h${p && p.t > 5 ? " · por " + fmt(p.t) : ""}</small>
+        <span class="bar"><i style="width:${pct}%"></i></span></span></button>
+      <a class="dl" href="${e.url}" download title="Descargar" target="_blank" rel="noopener">⬇</a>`;
+    li.querySelector("button").onclick = () => (cur && cur.date === e.date) ? toggle() : load(e, true);
+    list.appendChild(li);
+  }
+  if (!eps.length) list.innerHTML = "<li style='color:var(--muted);padding:12px'>Sin resultados.</li>";
+}
+
+function load(e, play){
+  cur = e;
+  au.src = e.url;
+  au.playbackRate = +$("rate").value;
+  $("now").textContent = "Lo que me sale del Pen · " + e.short;
+  const p = prog[e.date];
+  au.onloadedmetadata = () => {
+    if (p && p.t > 5 && p.t < au.duration - 30) au.currentTime = p.t;
+    updateTime();
+  };
+  store.set("lqmsdp-last", e.date);
+  if (play) au.play().catch(()=>{});
+  render();
+}
+
+function toggle(){ if (!cur) return load(EPS[EPS.length-1], true); au.paused ? au.play() : au.pause(); }
+function skip(s){ if (cur) au.currentTime = Math.max(0, Math.min(au.duration || 1e9, au.currentTime + s)); }
+function step(dir){
+  if (!cur) return;
+  const i = EPS.findIndex(e => e.date === cur.date) + dir;
+  if (EPS[i]) load(EPS[i], true);
+}
+
+let seeking = false, lastSave = 0;
+function updateTime(){
+  const d = au.duration || 0;
+  $("cur").textContent = fmt(au.currentTime);
+  $("dur").textContent = fmt(d);
+  if (!seeking) $("seek").value = d ? au.currentTime / d * 1000 : 0;
+}
+au.ontimeupdate = () => {
+  updateTime();
+  if (cur && Date.now() - lastSave > 3000){
+    lastSave = Date.now();
+    prog[cur.date] = {t: au.currentTime, d: au.duration || 0};
+    store.set("lqmsdp-progress", prog);
+    const li = list.querySelector("li.on .bar i");
+    if (li && au.duration) li.style.width = (au.currentTime / au.duration * 100) + "%";
+  }
+};
+au.onplay = au.onpause = () => {
+  $("play").textContent = au.paused ? "▶" : "❚❚";
+  const ico = list.querySelector("li.on .ico"); if (ico) ico.textContent = au.paused ? "▶" : "❚❚";
+  if (cur) { prog[cur.date] = {t: au.currentTime, d: au.duration || 0}; store.set("lqmsdp-progress", prog); }
+};
+au.onended = () => {
+  if (cur) { prog[cur.date] = {t: 0, d: au.duration}; store.set("lqmsdp-progress", prog); }
+  step(1);
+};
+au.onerror = () => { if (cur) $("now").textContent = "No se pudo cargar este programa (" + cur.short + ")"; };
+
+$("seek").oninput = e => { seeking = true; $("cur").textContent = fmt(e.target.value / 1000 * (au.duration || 0)); };
+$("seek").onchange = e => { if (au.duration) au.currentTime = e.target.value / 1000 * au.duration; seeking = false; };
+$("play").onclick = toggle;
+$("b15").onclick = () => skip(-15); $("f15").onclick = () => skip(15);
+$("b60").onclick = () => skip(-60);  $("f60").onclick = () => skip(60);
+$("prev").onclick = () => step(-1);  $("next").onclick = () => step(1);
+$("rate").onchange = e => { au.playbackRate = +e.target.value; store.set("lqmsdp-rate", e.target.value); };
+$("vol").oninput = e => { au.volume = +e.target.value; store.set("lqmsdp-vol", e.target.value); };
+$("q").oninput = render; $("order").onchange = render;
+
+document.addEventListener("keydown", e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type !== "range") return;
+  if (e.target.tagName === "BUTTON") return;
+  if (e.code === "Space"){ e.preventDefault(); toggle(); }
+  else if (e.code === "ArrowRight"){ e.preventDefault(); skip(15); }
+  else if (e.code === "ArrowLeft"){ e.preventDefault(); skip(-15); }
+  else if (e.code === "ArrowUp"){ e.preventDefault(); au.volume = Math.min(1, au.volume + .05); $("vol").value = au.volume; }
+  else if (e.code === "ArrowDown"){ e.preventDefault(); au.volume = Math.max(0, au.volume - .05); $("vol").value = au.volume; }
+});
+
+// Media Session (teclas multimedia / pantalla de bloqueo)
+if ("mediaSession" in navigator){
+  const ms = navigator.mediaSession;
+  ms.setActionHandler("play", () => au.play());
+  ms.setActionHandler("pause", () => au.pause());
+  ms.setActionHandler("seekbackward", () => skip(-15));
+  ms.setActionHandler("seekforward", () => skip(15));
+  ms.setActionHandler("previoustrack", () => step(-1));
+  ms.setActionHandler("nexttrack", () => step(1));
+  au.addEventListener("play", () => { if (cur) ms.metadata = new MediaMetadata({title: "Lo que me sale del Pen · " + cur.short, artist: "DJ Neil", album: "Loca FM"}); });
+}
+
+// ---- Detección de programas nuevos ----
+// Los audios siguen un patrón (viernes 14:00). Se prueba cada viernes posterior al último
+// conocido cargando solo los metadatos del mp3: si carga, el programa existe.
+const extra = store.get("lqmsdp-extra", []);          // fechas descubiertas, guardadas en este móvil
+const fechas = () => [...new Set([...DATES, ...extra])].sort();
+function existe(d){
+  return new Promise(res => {
+    const a = new Audio();
+    const fin = ok => { a.onloadedmetadata = a.onerror = null; a.removeAttribute("src"); a.load(); res(ok); };
+    a.preload = "metadata";
+    a.onloadedmetadata = () => fin(true);
+    a.onerror = () => fin(false);
+    setTimeout(() => fin(false), 15000);
+    a.src = BASE + d + "_14-00.mp3";
+  });
+}
+const sumar = (d, n) => { const t = new Date(d + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0,10); };
+let buscando = false;
+async function buscarNuevos(){
+  if (buscando) return; buscando = true;
+  const st = $("status"), btn = $("upd"); btn.disabled = true; st.textContent = "Buscando programas nuevos…";
+  const hoy = new Date().toISOString().slice(0,10);
+  let d = sumar(fechas().slice(-1)[0], 7), nuevos = 0;
+  while (d <= hoy){
+    if (await existe(d)){ extra.push(d); nuevos++; }
+    d = sumar(d, 7);
+  }
+  if (nuevos){
+    store.set("lqmsdp-extra", extra);
+    EPS = fechas().map(mk);
+    render();
+  }
+  st.textContent = nuevos ? "Añadidos " + nuevos + " programa(s) nuevo(s)." : (navigator.onLine ? "No hay programas nuevos." : "Sin conexión.");
+  btn.disabled = false; buscando = false;
+}
+$("upd").onclick = buscarNuevos;
+
+// Estado inicial
+EPS = fechas().map(mk);
+$("rate").value = store.get("lqmsdp-rate", "1");
+au.volume = +store.get("lqmsdp-vol", 1); $("vol").value = au.volume;
+render();
+const last = EPS.find(e => e.date === store.get("lqmsdp-last", null));
+if (last) { load(last, false); }
+buscarNuevos();
+</script>
+</body>
+</html>
