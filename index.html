@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/android-icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/apple-icon-180x180.png">
+<meta name="theme-color" content="#0f0f14">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Lo que me sale del Pen · Archivo</title>
 <style>
   :root{
@@ -83,11 +88,13 @@
       <span id="dur">0:00:00</span>
     </div>
     <div class="ctrl">
+      <button id="b600" title="Atrás 10 min">−10m</button>
       <button id="b60" title="Atrás 1 min">−1m</button>
       <button id="b15" title="Atrás 15 s">−15s</button>
       <button id="play" title="Reproducir / pausa (espacio)">▶</button>
       <button id="f15" title="Adelante 15 s">+15s</button>
       <button id="f60" title="Adelante 1 min">+1m</button>
+      <button id="f600" title="Adelante 10 min">+10m</button>
       <button id="prev" title="Programa anterior">⏮</button>
       <button id="next" title="Programa siguiente">⏭</button>
       <select id="rate" title="Velocidad">
@@ -95,6 +102,7 @@
       </select>
       <div class="vol">🔊<input id="vol" type="range" min="0" max="1" step="0.01" value="1"></div>
     </div>
+    <div class="hint" id="ext" style="display:none"></div>
     <div class="hint">Espacio: play/pausa · ← → ±15 s · ↑ ↓ volumen · retoma donde lo dejaste</div>
   </div>
 </div>
@@ -162,13 +170,27 @@ function load(e, play){
     if (p && p.t > 5 && p.t < au.duration - 30) au.currentTime = p.t;
     updateTime();
   };
+  $("ext").style.display = "";
+  $("ext").innerHTML = '¿Va lento al saltar? <a style="color:var(--accent)" href="' + e.url + '" target="_blank" rel="noopener">Abrir en otra app de audio</a>';
   store.set("lqmsdp-last", e.date);
   if (play) au.play().catch(()=>{});
   render();
 }
 
 function toggle(){ if (!cur) return load(EPS[EPS.length-1], true); au.paused ? au.play() : au.pause(); }
-function skip(s){ if (cur) au.currentTime = Math.max(0, Math.min(au.duration || 1e9, au.currentTime + s)); }
+// Varios toques seguidos se suman y se hace UN solo salto (cada salto obliga al móvil a recargar audio)
+let pend = 0, pendT = null;
+function skip(s){
+  if (!cur) return;
+  pend += s;
+  const base = (au.currentTime || 0) + pend;
+  $("cur").textContent = fmt(Math.max(0, base));
+  clearTimeout(pendT);
+  pendT = setTimeout(() => {
+    au.currentTime = Math.max(0, Math.min((au.duration || 1e9) - 1, au.currentTime + pend));
+    pend = 0;
+  }, 450);
+}
 function step(dir){
   if (!cur) return;
   const i = EPS.findIndex(e => e.date === cur.date) + dir;
@@ -201,11 +223,14 @@ au.onended = () => {
   if (cur) { prog[cur.date] = {t: 0, d: au.duration}; store.set("lqmsdp-progress", prog); }
   step(1);
 };
+au.onwaiting = au.onseeking = () => { $("play").textContent = "⏳"; $("now").textContent = "Cargando… " + (cur ? cur.short : ""); };
+au.onplaying = au.onseeked = au.oncanplay = () => { $("play").textContent = au.paused ? "▶" : "❚❚"; if (cur) $("now").textContent = "Lo que me sale del Pen · " + cur.short; };
 au.onerror = () => { if (cur) $("now").textContent = "No se pudo cargar este programa (" + cur.short + ")"; };
 
 $("seek").oninput = e => { seeking = true; $("cur").textContent = fmt(e.target.value / 1000 * (au.duration || 0)); };
 $("seek").onchange = e => { if (au.duration) au.currentTime = e.target.value / 1000 * au.duration; seeking = false; };
 $("play").onclick = toggle;
+$("b600").onclick = () => skip(-600); $("f600").onclick = () => skip(600);
 $("b15").onclick = () => skip(-15); $("f15").onclick = () => skip(15);
 $("b60").onclick = () => skip(-60);  $("f60").onclick = () => skip(60);
 $("prev").onclick = () => step(-1);  $("next").onclick = () => step(1);

@@ -1,0 +1,14 @@
+{
+  "name": "Lo que me sale del Pen",
+  "short_name": "LQMSDP",
+  "description": "Archivo de programas de DJ Neil en Loca FM",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "#0f0f14",
+  "icons": [
+    {"src": "icons/android-icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/ms-icon-310x310.png", "sizes": "310x310", "type": "image/png", "purpose": "any"}
+  ]
+}
